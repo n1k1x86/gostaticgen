@@ -9,7 +9,7 @@ import (
 	"github.com/russross/blackfriday/v2"
 )
 
-func ReadMdFiles(dir string, output string) {
+func MdToHtml(dir string, output string) {
 	log.Println("[INFO] - start reading files and transform to html")
 	files, err := os.ReadDir(dir)
 	if err != nil {

@@ -2,6 +2,7 @@ package main
 
 import (
 	"core/pkg/reader"
+	"core/pkg/server"
 	"flag"
 	"log"
 	"os"
@@ -22,6 +23,7 @@ func main() {
 		}
 	}
 
-	reader.ReadMdFiles(*markdownDir, *outDir)
+	reader.MdToHtml(*markdownDir, *outDir)
 
+	server.RunServer(*markdownDir, *outDir)
 }
