@@ -1,7 +1,8 @@
 package main
 
 import (
-	"core/pkg/jsserver"
+	"core/pkg/reader"
+	"core/pkg/server"
 	"flag"
 	"log"
 	"os"
@@ -9,14 +10,9 @@ import (
 
 func main() {
 	markdownDir := flag.String("markdown_dir", "", "Full path to dir with mardowns")
-	//outDir := flag.String("output_dir", "", "Full path where to save htmls")
+	outDir := flag.String("output_dir", "", "Full path where to save htmls")
 
 	flag.Parse()
-
-	err := jsserver.CheckNpm()
-	if err != nil {
-		log.Fatal(err)
-	}
 
 	fileInfo, err := os.Stat(*markdownDir)
 	if err != nil {
@@ -27,6 +23,7 @@ func main() {
 		}
 	}
 
-	//reader.ReadMdFiles(*markdownDir, *outDir)
+	reader.MdToHtml(*markdownDir, *outDir)
 
+	server.RunServer(*markdownDir, *outDir)
 }
