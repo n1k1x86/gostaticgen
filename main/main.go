@@ -11,6 +11,7 @@ import (
 func main() {
 	markdownDir := flag.String("markdown_dir", "", "Full path to dir with mardowns")
 	outDir := flag.String("output_dir", "", "Full path where to save htmls")
+	configPath := flag.String("yaml", "", "Path to yaml configuration")
 
 	flag.Parse()
 
@@ -24,6 +25,7 @@ func main() {
 	}
 
 	reader.MdToHtml(*markdownDir, *outDir)
+	reader.ReadYaml(*configPath)
 
 	server.RunServer(*markdownDir, *outDir)
 }
