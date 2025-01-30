@@ -5,6 +5,7 @@ go 1.23.0
 require (
 	github.com/gin-gonic/gin v1.10.0
 	github.com/russross/blackfriday/v2 v2.1.0
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
@@ -32,5 +33,4 @@ require (
 	golang.org/x/sys v0.29.0 // indirect
 	golang.org/x/text v0.21.0 // indirect
 	google.golang.org/protobuf v1.36.4 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
