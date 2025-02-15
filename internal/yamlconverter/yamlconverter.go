@@ -2,7 +2,6 @@ package yamlconverter
 
 import (
 	"errors"
-	"fmt"
 	"io/fs"
 	"log"
 	"os"
@@ -15,9 +14,15 @@ type YamlProcessorInterface interface {
 	ReadYamls()
 }
 
+type PreparedConfigs struct {
+	Yaml       YamlConfig
+	ConfigPath string
+}
+
 type YamlProcessor struct {
-	Configs  []fs.DirEntry
-	RootPath string
+	ProcessedConfigs []PreparedConfigs
+	Configs          []fs.DirEntry
+	RootPath         string
 }
 
 type Block struct {
@@ -29,15 +34,14 @@ type YamlConfig struct {
 	Navigation string  `yaml:"navigation"`
 }
 
-func (y *YamlProcessor) ReadConfig(data []byte) YamlConfig {
+func (y *YamlProcessor) ReadConfig(data []byte, pagePath string) {
 	config := YamlConfig{}
-	fmt.Println(string(data))
 	err := yaml.Unmarshal(data, &config)
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	return config
+	prepConfig := PreparedConfigs{Yaml: config, ConfigPath: pagePath}
+	y.ProcessedConfigs = append(y.ProcessedConfigs, prepConfig)
 }
 
 func (y *YamlProcessor) FindYaml(files []fs.DirEntry) (fs.DirEntry, error) {
@@ -62,12 +66,11 @@ func (y *YamlProcessor) ReadYamls() {
 				log.Fatal(err)
 			}
 			confPath := pagePath + "\\" + file.Name()
-			fmt.Println(confPath)
 			data, err := os.ReadFile(confPath)
 			if err != nil {
 				log.Fatal(err)
 			}
-			y.ReadConfig(data)
+			y.ReadConfig(data, pagePath)
 		}
 	}
 
