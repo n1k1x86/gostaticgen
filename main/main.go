@@ -1,6 +1,7 @@
 package main
 
 import (
+	"core/internal/mdconverter"
 	"core/internal/yamlconverter"
 	"flag"
 	"log"
@@ -22,16 +23,19 @@ func main() {
 	for _, conf := range configDirs {
 		fileInfo, err := conf.Info()
 		if err != nil {
-			log.Fatalf("No such file or directory: %s", conf)
+			log.Fatalf("No such file or directory: %s", conf.Name())
 		} else {
 			if fileInfo.IsDir() {
-				log.Printf("[INFO] - directory %s was loaded", conf)
+				log.Printf("[INFO] - directory %s was loaded", conf.Name())
 			}
 		}
 	}
 
 	yaProc := yamlconverter.YamlProcessor{Configs: configDirs, RootPath: *yamls}
 	yaProc.ReadYamls()
+
+	mdConv := mdconverter.MdConverter{Configs: yaProc.ProcessedConfigs}
+	mdConv.StartConverting()
 
 	// server.RunServer(*markdownDir, *outDir)
 }
