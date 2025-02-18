@@ -34,7 +34,7 @@ func (m *MdConverter) IsItalicPattern(line string) (bool, *regexp.Regexp) {
 }
 
 func (m *MdConverter) IsBoldPattern(line string) (bool, *regexp.Regexp) {
-	re, err := regexp.Compile(`\*{2}(\w|\s)+\*{2}`)
+	re, err := regexp.Compile(`\*{2}([\w\sа-яА-Я^\*]+?)\*{2}`)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -85,16 +85,25 @@ func (m *MdConverter) ReplaceItalic(line string, re *regexp.Regexp) string {
 	return newLine
 }
 
+func (m *MdConverter) ReplaceBold(line string, re *regexp.Regexp) string {
+	var newLine string = ""
+	newLine = re.ReplaceAllString(line, "<b class=\"bold-class\">$1</b>")
+	return newLine
+}
+
 func (m *MdConverter) ConvertToHtml(data string) {
 	for _, line := range strings.Split(data, "\r\n") {
 		if ok := m.IsHeaderPattern(line); ok {
 			newLine := m.ReplaceHeader(line)
 			fmt.Println("Line:", newLine, "IsHeaderPattern?:", ok)
+		} else if ok, re := m.IsBoldPattern(line); ok {
+			newLine := m.ReplaceBold(line, re)
+			fmt.Println("Line:", newLine, "IsBoldPattern?:", ok)
 		} else if ok, re := m.IsItalicPattern(line); ok {
 			newLine := m.ReplaceItalic(line, re)
 			fmt.Println("Line:", newLine, "IsItalicPattern?:", ok)
 		} else {
-			fmt.Println("Line:", line, "IsHeaderPattern?:", m.IsHeaderPattern(line))
+			fmt.Println("Line:", line, "Unknown pattern")
 		}
 	}
 }
