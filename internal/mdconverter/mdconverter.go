@@ -33,22 +33,6 @@ func (m *MdConverter) IsOrderedListPattern(line string) (bool, *regexp.Regexp) {
 	return re.MatchString(line), re
 }
 
-func (m *MdConverter) IsLinkPattern(line string) (bool, *regexp.Regexp) {
-	re, err := regexp.Compile(`\[(\W|\w|\D)+\]\((\W|\w|\D)+\)`)
-	if err != nil {
-		log.Fatal(err)
-	}
-	return re.MatchString(line), re
-}
-
-func (m *MdConverter) IsImgPattern(line string) (bool, *regexp.Regexp) {
-	re, err := regexp.Compile(`\!\[(\W|\w|\D)+\]\((\W|\w|\D)+\)`)
-	if err != nil {
-		log.Fatal(err)
-	}
-	return re.MatchString(line), re
-}
-
 func (m *MdConverter) ReplaceHeader(line *string) {
 	re, err := regexp.Compile(`^#{1,6}\s(\W|\d|\w)+`)
 	if err != nil {
@@ -81,11 +65,35 @@ func (m *MdConverter) ReplaceBold(line *string) {
 	}
 }
 
+func (m *MdConverter) ReplaceLink(line *string) {
+	re, err := regexp.Compile(`\[(\W|\w|\D+?)\]\((\W|\w|\D+?)\)`)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if re.MatchString(*line) {
+		aTag := "<a href=\"$2\" class=\"link-class\">$1</a>"
+		*line = re.ReplaceAllString(*line, aTag)
+	}
+}
+
+func (m *MdConverter) ReplaceImg(line *string) {
+	re, err := regexp.Compile(`\!\[([\W|\w|\D]+?)\]\((\W|\w|\D+?)\)`)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if re.MatchString(*line) {
+		imgTag := "<img src=\"$2\" class=\"img-class\" alt=\"$1\" />"
+		*line = re.ReplaceAllString(*line, imgTag)
+	}
+}
+
 func (m *MdConverter) ConvertToHtml(data string) {
 	for _, line := range strings.Split(data, "\r\n") {
 		m.ReplaceHeader(&line)
 		m.ReplaceBold(&line)
 		m.ReplaceItalic(&line)
+		m.ReplaceImg(&line)
+		m.ReplaceLink(&line)
 		fmt.Println("Line:", line)
 	}
 }
