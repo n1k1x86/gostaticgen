@@ -13,50 +13,67 @@ type MdConverterInterface interface {
 	StartConverting(mdFiles []string, confPath string)
 }
 
-type UnOrderedListInterface interface {
+type HTMLListInterface interface {
 	PushLine(line string)
 	ClearQueue()
 }
 
-type UnOrderedListQueue struct {
-	Lines []*string
+type HTMLListQueue struct {
+	UnLines []*string
+	OrLines []*string
 }
 
-func (u *UnOrderedListQueue) PushLine(line *string) {
-	u.Lines = append(u.Lines, line)
+func (h *HTMLListQueue) PushLineUn(line *string) {
+	h.UnLines = append(h.UnLines, line)
 }
 
-func (u *UnOrderedListQueue) ClearQueue() {
-	u.Lines = make([]*string, 0)
+func (h *HTMLListQueue) ClearQueueUn() {
+	h.UnLines = make([]*string, 0)
 }
 
-func (u *UnOrderedListQueue) GetQueueLength() int {
-	return len(u.Lines)
+func (h *HTMLListQueue) GetQueueLengthUn() int {
+	return len(h.UnLines)
 }
 
-func (u *UnOrderedListQueue) FormList() string {
+func (h *HTMLListQueue) PushLineOr(line *string) {
+	h.OrLines = append(h.OrLines, line)
+}
+
+func (h *HTMLListQueue) ClearQueueOr() {
+	h.OrLines = make([]*string, 0)
+}
+
+func (h *HTMLListQueue) GetQueueLengthOr() int {
+	return len(h.OrLines)
+}
+
+func (h *HTMLListQueue) FormList() string {
 	resList := "<ul>\n"
 	endList := "</ul>"
-	for _, line := range u.Lines {
+	for _, line := range h.UnLines {
 		text := string([]rune(*line)[2:])
 		*line = fmt.Sprintf("<li>%s</li>", text)
 		resList += *line + "\n"
 	}
-	u.ClearQueue()
+	h.ClearQueueUn()
+	return resList + endList
+}
+
+func (h *HTMLListQueue) FormOrderedList() string {
+	resList := "<ol>\n"
+	endList := "</ol>"
+	for _, line := range h.OrLines {
+		text := string([]rune(*line)[3:])
+		*line = fmt.Sprintf("<li>%s</li>", text)
+		resList += *line + "\n"
+	}
+	h.ClearQueueOr()
 	return resList + endList
 }
 
 type MdConverter struct {
 	Configs []conf.PreparedConfigs
-	UnOrderedListQueue
-}
-
-func (m *MdConverter) IsOrderedListPattern(line string) (bool, *regexp.Regexp) {
-	re, err := regexp.Compile(`^[0-9]+\.\s(\W|\d|\w)+`)
-	if err != nil {
-		log.Fatal(err)
-	}
-	return re.MatchString(line), re
+	HTMLListQueue
 }
 
 func (m *MdConverter) ReplaceHeader(line *string) {
@@ -113,19 +130,35 @@ func (m *MdConverter) ReplaceImg(line *string) {
 	}
 }
 
-func (m *MdConverter) ReplaceUnOrderedList(line *string, fin bool) (bool, string) {
+func (m *MdConverter) ReplaceUnOrderedList(line *string, fin bool) (string, bool) {
 	re, err := regexp.Compile(`^-{1}\s[(\W|\s|\d|\w^\-+?)]`)
 	if err != nil {
 		log.Fatal(err)
 	}
 	if re.MatchString(*line) && !fin {
-		m.PushLine(line)
-		return true, ""
-	} else if m.GetQueueLength() != 0 {
+		m.PushLineUn(line)
+		return "", true
+	} else if m.GetQueueLengthUn() != 0 {
 		resList := m.FormList()
-		return false, resList
+		return resList, false
 	} else {
-		return false, *line
+		return "", false
+	}
+}
+
+func (m *MdConverter) ReplaceOrderedList(line *string, fin bool) (string, bool) {
+	re, err := regexp.Compile(`^[0-9]+\.\s[(\W|\d|\w)]+`)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if re.MatchString(*line) && !fin {
+		m.PushLineOr(line)
+		return "", true
+	} else if m.GetQueueLengthOr() != 0 {
+		resList := m.FormOrderedList()
+		return resList, false
+	} else {
+		return "", false
 	}
 }
 
@@ -139,11 +172,22 @@ func (m *MdConverter) ConvertToHtml(data string) {
 		m.ReplaceItalic(&line)
 		m.ReplaceImg(&line)
 		m.ReplaceLink(&line)
-		if ok, res := m.ReplaceUnOrderedList(&line, fin); ok {
+		res, ok := m.ReplaceUnOrderedList(&line, fin)
+		if ok {
 			continue
-		} else {
+		} else if res != "" {
 			htmlContent += res + "\n"
 		}
+
+		res, ok = m.ReplaceOrderedList(&line, fin)
+		if ok {
+			continue
+		} else if res != "" {
+			htmlContent += res + "\n"
+		}
+
+		htmlContent += line + "\n"
+
 	}
 	fmt.Println(htmlContent)
 }
