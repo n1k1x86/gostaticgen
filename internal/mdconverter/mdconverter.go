@@ -56,7 +56,8 @@ func (m *MdConverter) ReplaceHeader(line *string) {
 	}
 	if re.MatchString(*line) {
 		hashCnt := strings.Count(*line, "#")
-		*line = strings.Replace(*line, strings.Repeat("#", hashCnt)+" ", "<h1 class=\"header-1\">", 1) + "<\\h1>"
+		hTagStart := fmt.Sprintf("<h1 class=\"header-%d\">", hashCnt)
+		*line = strings.Replace(*line, strings.Repeat("#", hashCnt)+" ", hTagStart, 1) + "<\\h1>"
 	}
 }
 
