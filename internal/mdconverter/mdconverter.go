@@ -84,7 +84,7 @@ func (m *MdConverter) ReplaceHeader(line *string) {
 	if re.MatchString(*line) {
 		hashCnt := strings.Count(*line, "#")
 		hTagStart := fmt.Sprintf("<h1 class=\"header-%d\">", hashCnt)
-		*line = strings.Replace(*line, strings.Repeat("#", hashCnt)+" ", hTagStart, 1) + "<\\h1>"
+		*line = strings.Replace(*line, strings.Repeat("#", hashCnt)+" ", hTagStart, 1) + "</h1>"
 	}
 }
 
@@ -189,7 +189,6 @@ func (m *MdConverter) ConvertToHtml(data string) {
 		htmlContent += line + "\n"
 
 	}
-	fmt.Println(htmlContent)
 }
 
 func (m *MdConverter) ReadMds(config conf.PreparedConfigs) {
