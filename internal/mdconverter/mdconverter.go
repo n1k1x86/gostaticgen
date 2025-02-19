@@ -17,30 +17,6 @@ type MdConverter struct {
 	Configs []conf.PreparedConfigs
 }
 
-func (m *MdConverter) IsHeaderPattern(line string) bool {
-	re, err := regexp.Compile(`^#{1,6}\s(\W|\d|\w)+`)
-	if err != nil {
-		log.Fatal(err)
-	}
-	return re.MatchString(line)
-}
-
-func (m *MdConverter) IsItalicPattern(line string) (bool, *regexp.Regexp) {
-	re, err := regexp.Compile(`\*{1}([\w\sа-яА-Я^\*]+?)\*{1}`)
-	if err != nil {
-		log.Fatal(err)
-	}
-	return re.MatchString(line), re
-}
-
-func (m *MdConverter) IsBoldPattern(line string) (bool, *regexp.Regexp) {
-	re, err := regexp.Compile(`\*{2}([\w\sа-яА-Я^\*]+?)\*{2}`)
-	if err != nil {
-		log.Fatal(err)
-	}
-	return re.MatchString(line), re
-}
-
 func (m *MdConverter) IsUnOrderedListPattern(line string) (bool, *regexp.Regexp) {
 	re, err := regexp.Compile(`^-{1}\s(\W|\s|\d)+`)
 	if err != nil {
@@ -57,54 +33,68 @@ func (m *MdConverter) IsOrderedListPattern(line string) (bool, *regexp.Regexp) {
 	return re.MatchString(line), re
 }
 
-func (m *MdConverter) IsLinkPattern(line string) (bool, *regexp.Regexp) {
-	re, err := regexp.Compile(`\[(\W|\w|\D)+\]\((\W|\w|\D)+\)`)
+func (m *MdConverter) ReplaceHeader(line *string) {
+	re, err := regexp.Compile(`^#{1,6}\s(\W|\d|\w)+`)
 	if err != nil {
 		log.Fatal(err)
 	}
-	return re.MatchString(line), re
+	if re.MatchString(*line) {
+		hashCnt := strings.Count(*line, "#")
+		hTagStart := fmt.Sprintf("<h1 class=\"header-%d\">", hashCnt)
+		*line = strings.Replace(*line, strings.Repeat("#", hashCnt)+" ", hTagStart, 1) + "<\\h1>"
+	}
 }
 
-func (m *MdConverter) IsImgPattern(line string) (bool, *regexp.Regexp) {
-	re, err := regexp.Compile(`\!\[(\W|\w|\D)+\]\((\W|\w|\D)+\)`)
+func (m *MdConverter) ReplaceItalic(line *string) {
+	re, err := regexp.Compile(`\*{1}([\w\sа-яА-Я^\*]+?)\*{1}`)
 	if err != nil {
 		log.Fatal(err)
 	}
-	return re.MatchString(line), re
+	if re.MatchString(*line) {
+		*line = re.ReplaceAllString(*line, "<em class=\"italic-class\">$1</em>")
+	}
 }
 
-func (m *MdConverter) ReplaceHeader(line string) string {
-	hashCnt := strings.Count(line, "#")
-	newLine := strings.Replace(line, strings.Repeat("#", hashCnt)+" ", "<h1 class=\"header-1\">", 1) + "<\\h1>"
-	return newLine
+func (m *MdConverter) ReplaceBold(line *string) {
+	re, err := regexp.Compile(`\*{2}([\w\sа-яА-Я^\*]+?)\*{2}`)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if re.MatchString(*line) {
+		*line = re.ReplaceAllString(*line, "<b class=\"bold-class\">$1</b>")
+	}
 }
 
-func (m *MdConverter) ReplaceItalic(line string, re *regexp.Regexp) string {
-	var newLine string = ""
-	newLine = re.ReplaceAllString(line, "<em class=\"italic-class\">$1</em>")
-	return newLine
+func (m *MdConverter) ReplaceLink(line *string) {
+	re, err := regexp.Compile(`\[(\W|\w|\D+?)\]\((\W|\w|\D+?)\)`)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if re.MatchString(*line) {
+		aTag := "<a href=\"$2\" class=\"link-class\">$1</a>"
+		*line = re.ReplaceAllString(*line, aTag)
+	}
 }
 
-func (m *MdConverter) ReplaceBold(line string, re *regexp.Regexp) string {
-	var newLine string = ""
-	newLine = re.ReplaceAllString(line, "<b class=\"bold-class\">$1</b>")
-	return newLine
+func (m *MdConverter) ReplaceImg(line *string) {
+	re, err := regexp.Compile(`\!\[([\W|\w|\D]+?)\]\((\W|\w|\D+?)\)`)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if re.MatchString(*line) {
+		imgTag := "<img src=\"$2\" class=\"img-class\" alt=\"$1\" />"
+		*line = re.ReplaceAllString(*line, imgTag)
+	}
 }
 
 func (m *MdConverter) ConvertToHtml(data string) {
 	for _, line := range strings.Split(data, "\r\n") {
-		if ok := m.IsHeaderPattern(line); ok {
-			newLine := m.ReplaceHeader(line)
-			fmt.Println("Line:", newLine, "IsHeaderPattern?:", ok)
-		} else if ok, re := m.IsBoldPattern(line); ok {
-			newLine := m.ReplaceBold(line, re)
-			fmt.Println("Line:", newLine, "IsBoldPattern?:", ok)
-		} else if ok, re := m.IsItalicPattern(line); ok {
-			newLine := m.ReplaceItalic(line, re)
-			fmt.Println("Line:", newLine, "IsItalicPattern?:", ok)
-		} else {
-			fmt.Println("Line:", line, "Unknown pattern")
-		}
+		m.ReplaceHeader(&line)
+		m.ReplaceBold(&line)
+		m.ReplaceItalic(&line)
+		m.ReplaceImg(&line)
+		m.ReplaceLink(&line)
+		fmt.Println("Line:", line)
 	}
 }
 
