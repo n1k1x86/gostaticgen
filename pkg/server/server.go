@@ -29,8 +29,8 @@ func handlerFactory(file string) func(c *gin.Context) {
 	}
 }
 
-func RunServer(dir string, out string) {
-	files := GetHtmls(dir)
+func RunServer(out string) {
+	files := GetHtmls(out)
 	r := gin.Default()
 	r.LoadHTMLGlob(out + "/*")
 	for _, file := range files {

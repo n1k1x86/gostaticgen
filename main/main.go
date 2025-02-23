@@ -3,6 +3,7 @@ package main
 import (
 	"core/internal/mdconverter"
 	"core/internal/yamlconverter"
+	"core/pkg/server"
 	"flag"
 	"log"
 	"os"
@@ -37,5 +38,5 @@ func main() {
 	mdConv := mdconverter.MdConverter{Configs: yaProc.ProcessedConfigs}
 	mdConv.StartConverting(outDir)
 
-	// server.RunServer(*markdownDir, *outDir)
+	server.RunServer(*outDir)
 }

@@ -193,6 +193,22 @@ func (m *MdConverter) ConvertToHtml(data string) string {
 	return blockContent + "\n</div>\n"
 }
 
+func (m *MdConverter) FinishPage(title string, body string) string {
+	finishPage := fmt.Sprintf(`<!DOCTYPE html>
+	<html lang="ru">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>%s</title>
+		<link rel="stylesheet" href="styles.css">
+	</head>
+	<body>
+		%s
+	</body>
+	</html>`, title, body)
+	return finishPage
+}
+
 func (m *MdConverter) BuildHtml(config conf.PreparedConfigs) string {
 	htmlContent := ""
 	confPath := config.ConfigPath
@@ -206,9 +222,8 @@ func (m *MdConverter) BuildHtml(config conf.PreparedConfigs) string {
 	return htmlContent
 }
 
-func (m *MdConverter) SaveHtml(htmlContent string, outDir *string, config string) error {
-	fileName := strings.Split(config, "\\")
-	err := os.WriteFile(*outDir+fileName[len(fileName)-1]+".html", []byte(htmlContent), fs.FileMode(os.O_RDWR))
+func (m *MdConverter) SaveHtml(htmlContent string, outDir *string, fileName string) error {
+	err := os.WriteFile(*outDir+fileName+".html", []byte(htmlContent), fs.FileMode(os.O_RDWR))
 	if err != nil {
 		return err
 	}
@@ -217,8 +232,11 @@ func (m *MdConverter) SaveHtml(htmlContent string, outDir *string, config string
 
 func (m *MdConverter) StartConverting(outDir *string) {
 	for _, config := range m.Configs {
-		htmlContent := m.BuildHtml(config)
-		err := m.SaveHtml(htmlContent, outDir, config.ConfigPath)
+		fileNameWords := strings.Split(config.ConfigPath, "\\")
+		fileName := fileNameWords[len(fileNameWords)-1]
+		content := m.BuildHtml(config)
+		htmlPage := m.FinishPage(fileName, content)
+		err := m.SaveHtml(htmlPage, outDir, fileName)
 		if err != nil {
 			log.Fatal(err)
 		}
