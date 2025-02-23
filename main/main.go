@@ -3,13 +3,14 @@ package main
 import (
 	"core/internal/mdconverter"
 	"core/internal/yamlconverter"
+	"core/pkg/server"
 	"flag"
 	"log"
 	"os"
 )
 
 func main() {
-	// outDir := flag.String("output_dir", "", "Full path where to save htmls")
+	outDir := flag.String("output_dir", "", "Full path where to save htmls")
 	yamls := flag.String("yamls", "", "Path to yaml configuration")
 
 	flag.Parse()
@@ -35,7 +36,7 @@ func main() {
 	yaProc.ReadYamls()
 
 	mdConv := mdconverter.MdConverter{Configs: yaProc.ProcessedConfigs}
-	mdConv.StartConverting()
+	mdConv.StartConverting(outDir)
 
-	// server.RunServer(*markdownDir, *outDir)
+	server.RunServer(*outDir)
 }
