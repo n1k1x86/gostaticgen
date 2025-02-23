@@ -3,6 +3,7 @@ package mdconverter
 import (
 	conf "core/internal/yamlconverter"
 	"fmt"
+	"io/fs"
 	"log"
 	"os"
 	"regexp"
@@ -162,8 +163,8 @@ func (m *MdConverter) ReplaceOrderedList(line *string, fin bool) (string, bool) 
 	}
 }
 
-func (m *MdConverter) ConvertToHtml(data string) {
-	htmlContent := ""
+func (m *MdConverter) ConvertToHtml(data string) string {
+	blockContent := "<div class=\"block-class\">"
 	rows := strings.Split(data, "\r\n")
 	for ind, line := range rows {
 		fin := ind == len(rows)-1
@@ -176,34 +177,50 @@ func (m *MdConverter) ConvertToHtml(data string) {
 		if ok {
 			continue
 		} else if res != "" {
-			htmlContent += res + "\n"
+			blockContent += res + "\n"
 		}
 
 		res, ok = m.ReplaceOrderedList(&line, fin)
 		if ok {
 			continue
 		} else if res != "" {
-			htmlContent += res + "\n"
+			blockContent += res + "\n"
 		}
 
-		htmlContent += line + "\n"
+		blockContent += line + "\n"
 
 	}
+	return blockContent + "\n</div>\n"
 }
 
-func (m *MdConverter) ReadMds(config conf.PreparedConfigs) {
+func (m *MdConverter) BuildHtml(config conf.PreparedConfigs) string {
+	htmlContent := ""
 	confPath := config.ConfigPath
 	for _, md := range config.Yaml.Content {
 		data, err := os.ReadFile(confPath + "\\" + md.FileName + ".md")
 		if err != nil {
 			log.Fatal(err)
 		}
-		m.ConvertToHtml(string(data))
+		htmlContent += m.ConvertToHtml(string(data))
 	}
+	return htmlContent
 }
 
-func (m *MdConverter) StartConverting() {
+func (m *MdConverter) SaveHtml(htmlContent string, outDir *string, config string) error {
+	fileName := strings.Split(config, "\\")
+	err := os.WriteFile(*outDir+fileName[len(fileName)-1]+".html", []byte(htmlContent), fs.FileMode(os.O_RDWR))
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *MdConverter) StartConverting(outDir *string) {
 	for _, config := range m.Configs {
-		m.ReadMds(config)
+		htmlContent := m.BuildHtml(config)
+		err := m.SaveHtml(htmlContent, outDir, config.ConfigPath)
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 }
