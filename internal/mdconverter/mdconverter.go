@@ -200,9 +200,23 @@ func (m *MdConverter) FinishPage(title string, body string) string {
 		<meta charset="UTF-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
 		<title>%s</title>
-		<link rel="stylesheet" href="styles.css">
+		<link rel="stylesheet" href="/css/styles.css">
 	</head>
 	<body>
+		<header class="site-header">
+			<div class="container">
+				<div class="logo">
+					<a href="/">GoWiki</a>
+				</div>
+				<nav class="navbar">
+					<ul class="nav-links">
+						<li><a href="index.html">Home</a></li>
+						<li><a href="about.html">About</a></li>
+						<li><a href="contact.html">Contact</a></li>
+					</ul>
+				</nav>
+			</div>
+		</header>
 		%s
 	</body>
 	</html>`, title, body)
@@ -222,15 +236,189 @@ func (m *MdConverter) BuildHtml(config conf.PreparedConfigs) string {
 	return htmlContent
 }
 
-func (m *MdConverter) SaveHtml(htmlContent string, outDir *string, fileName string) error {
-	err := os.WriteFile(*outDir+fileName+".html", []byte(htmlContent), fs.FileMode(os.O_RDWR))
+func (m *MdConverter) SaveHtml(htmlContent string, outDir string, fileName string) error {
+	err := os.WriteFile(outDir+fileName+".html", []byte(htmlContent), fs.FileMode(os.O_RDWR))
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (m *MdConverter) StartConverting(outDir *string) {
+func (m *MdConverter) CreateCss(outDir string) error {
+	css := `/* Общие стили для body */
+	body {
+		font-family: 'Arial', sans-serif;
+		line-height: 1.6;
+		color: #333;
+		background-color: #f9f9f9;
+		margin: 0;
+		padding: 20px;
+	}
+	
+	/* Стили для блока с контентом */
+	.block-class {
+		background-color: #ffffff;
+		border-radius: 8px;
+		box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+		padding: 20px;
+		margin: 20px 0;
+		max-width: 800px;
+		margin-left: auto;
+		margin-right: auto;
+	}
+	
+	/* Стили для изображения */
+	.img-class {
+		max-width: 100%;
+		height: auto;
+		border-radius: 8px;
+		display: block;
+		margin: 20px auto;
+		box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+	}
+	
+	/* Стили для ссылки */
+	.link-class {
+		color: #007bff;
+		text-decoration: none;
+		font-weight: bold;
+		transition: color 0.3s ease;
+	}
+	
+	.link-class:hover {
+		color: #0056b3;
+		text-decoration: underline;
+	}
+	
+	/* Стили для жирного текста */
+	.bold-class {
+		font-weight: bold;
+		color: #222;
+	}
+	
+	/* Стили для курсива */
+	.italic-class {
+		font-style: italic;
+		color: #555;
+	}
+	
+	/* Стили для заголовков */
+	.header-1 {
+		font-size: 2.5rem;
+		color: #222;
+		margin-bottom: 20px;
+		font-weight: bold;
+	}
+	
+	.header-2 {
+		font-size: 2rem;
+		color: #222;
+		margin-bottom: 18px;
+		font-weight: bold;
+	}
+	
+	.header-3 {
+		font-size: 1.75rem;
+		color: #222;
+		margin-bottom: 16px;
+		font-weight: bold;
+	}
+	
+	.header-4 {
+		font-size: 1.5rem;
+		color: #222;
+		margin-bottom: 14px;
+		font-weight: bold;
+	}
+	
+	.header-5 {
+		font-size: 1.25rem;
+		color: #222;
+		margin-bottom: 12px;
+		font-weight: bold;
+	}
+	
+	.header-6 {
+		font-size: 1rem;
+		color: #222;
+		margin-bottom: 10px;
+		font-weight: bold;
+	}
+	/* General Styles */
+
+	.container {
+		width: 90%;
+		max-width: 1200px;
+		margin: 0 auto;
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+	}
+
+	/* Header Styles */
+	.site-header {
+		background-color: #333;
+		color: #fff;
+		padding: 20px 0;
+		position: sticky;
+		top: 0;
+		z-index: 1000;
+	}
+
+	.logo a {
+		color: #fff;
+		text-decoration: none;
+		font-size: 24px;
+		font-weight: bold;
+	}
+
+	.nav-links {
+		list-style: none;
+		display: flex;
+		margin: 0;
+		padding: 0;
+	}
+
+	.nav-links li {
+		margin-left: 20px;
+	}
+
+	.nav-links a {
+		color: #fff;
+		text-decoration: none;
+		font-size: 16px;
+		transition: color 0.3s ease;
+	}
+
+	.nav-links a:hover {
+		color: #007bff;
+	}
+
+	.cta .btn {
+		background-color: #007bff;
+		color: #fff;
+		padding: 10px 20px;
+		border-radius: 5px;
+		text-decoration: none;
+		font-size: 16px;
+		transition: background-color 0.3s ease;
+	}
+
+	.cta .btn:hover {
+		background-color: #0056b3;
+	}`
+	err := os.Mkdir(outDir+"\\css", fs.FileMode(os.O_RDWR))
+	if err != nil {
+		return err
+	}
+	err = os.WriteFile(outDir+"\\css\\styles.css", []byte(css), fs.FileMode(os.O_RDWR))
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *MdConverter) StartConverting(outDir string) {
 	for _, config := range m.Configs {
 		fileNameWords := strings.Split(config.ConfigPath, "\\")
 		fileName := fileNameWords[len(fileNameWords)-1]
@@ -240,5 +428,9 @@ func (m *MdConverter) StartConverting(outDir *string) {
 		if err != nil {
 			log.Fatal(err)
 		}
+	}
+	err := m.CreateCss(outDir)
+	if err != nil {
+		log.Fatal(err)
 	}
 }
