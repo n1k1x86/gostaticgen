@@ -203,6 +203,20 @@ func (m *MdConverter) FinishPage(title string, body string) string {
 		<link rel="stylesheet" href="/css/styles.css">
 	</head>
 	<body>
+		<header class="site-header">
+			<div class="container">
+				<div class="logo">
+					<a href="/">GoWiki</a>
+				</div>
+				<nav class="navbar">
+					<ul class="nav-links">
+						<li><a href="index.html">Home</a></li>
+						<li><a href="about.html">About</a></li>
+						<li><a href="contact.html">Contact</a></li>
+					</ul>
+				</nav>
+			</div>
+		</header>
 		%s
 	</body>
 	</html>`, title, body)
@@ -329,6 +343,69 @@ func (m *MdConverter) CreateCss(outDir string) error {
 		color: #222;
 		margin-bottom: 10px;
 		font-weight: bold;
+	}
+	/* General Styles */
+
+	.container {
+		width: 90%;
+		max-width: 1200px;
+		margin: 0 auto;
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+	}
+
+	/* Header Styles */
+	.site-header {
+		background-color: #333;
+		color: #fff;
+		padding: 20px 0;
+		position: sticky;
+		top: 0;
+		z-index: 1000;
+	}
+
+	.logo a {
+		color: #fff;
+		text-decoration: none;
+		font-size: 24px;
+		font-weight: bold;
+	}
+
+	.nav-links {
+		list-style: none;
+		display: flex;
+		margin: 0;
+		padding: 0;
+	}
+
+	.nav-links li {
+		margin-left: 20px;
+	}
+
+	.nav-links a {
+		color: #fff;
+		text-decoration: none;
+		font-size: 16px;
+		transition: color 0.3s ease;
+	}
+
+	.nav-links a:hover {
+		color: #007bff;
+	}
+
+	.cta .btn {
+		background-color: #007bff;
+		color: #fff;
+		padding: 10px 20px;
+		border-radius: 5px;
+		text-decoration: none;
+		font-size: 16px;
+		transition: background-color 0.3s ease;
+	}
+
+	.cta .btn:hover {
+		background-color: #0056b3;
 	}`
 	err := os.Mkdir(outDir+"\\css", fs.FileMode(os.O_RDWR))
 	if err != nil {
