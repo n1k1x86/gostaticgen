@@ -36,7 +36,7 @@ func main() {
 	yaProc.ReadYamls()
 
 	mdConv := mdconverter.MdConverter{Configs: yaProc.ProcessedConfigs}
-	mdConv.StartConverting(outDir)
+	mdConv.StartConverting(*outDir + "\\")
 
 	server.RunServer(*outDir)
 }

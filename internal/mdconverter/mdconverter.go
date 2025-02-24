@@ -200,7 +200,7 @@ func (m *MdConverter) FinishPage(title string, body string) string {
 		<meta charset="UTF-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
 		<title>%s</title>
-		<link rel="stylesheet" href="styles.css">
+		<link rel="stylesheet" href="/css/styles.css">
 	</head>
 	<body>
 		%s
@@ -222,15 +222,126 @@ func (m *MdConverter) BuildHtml(config conf.PreparedConfigs) string {
 	return htmlContent
 }
 
-func (m *MdConverter) SaveHtml(htmlContent string, outDir *string, fileName string) error {
-	err := os.WriteFile(*outDir+fileName+".html", []byte(htmlContent), fs.FileMode(os.O_RDWR))
+func (m *MdConverter) SaveHtml(htmlContent string, outDir string, fileName string) error {
+	err := os.WriteFile(outDir+fileName+".html", []byte(htmlContent), fs.FileMode(os.O_RDWR))
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (m *MdConverter) StartConverting(outDir *string) {
+func (m *MdConverter) CreateCss(outDir string) error {
+	css := `/* Общие стили для body */
+	body {
+		font-family: 'Arial', sans-serif;
+		line-height: 1.6;
+		color: #333;
+		background-color: #f9f9f9;
+		margin: 0;
+		padding: 20px;
+	}
+	
+	/* Стили для блока с контентом */
+	.block-class {
+		background-color: #ffffff;
+		border-radius: 8px;
+		box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+		padding: 20px;
+		margin: 20px 0;
+		max-width: 800px;
+		margin-left: auto;
+		margin-right: auto;
+	}
+	
+	/* Стили для изображения */
+	.img-class {
+		max-width: 100%;
+		height: auto;
+		border-radius: 8px;
+		display: block;
+		margin: 20px auto;
+		box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+	}
+	
+	/* Стили для ссылки */
+	.link-class {
+		color: #007bff;
+		text-decoration: none;
+		font-weight: bold;
+		transition: color 0.3s ease;
+	}
+	
+	.link-class:hover {
+		color: #0056b3;
+		text-decoration: underline;
+	}
+	
+	/* Стили для жирного текста */
+	.bold-class {
+		font-weight: bold;
+		color: #222;
+	}
+	
+	/* Стили для курсива */
+	.italic-class {
+		font-style: italic;
+		color: #555;
+	}
+	
+	/* Стили для заголовков */
+	.header-1 {
+		font-size: 2.5rem;
+		color: #222;
+		margin-bottom: 20px;
+		font-weight: bold;
+	}
+	
+	.header-2 {
+		font-size: 2rem;
+		color: #222;
+		margin-bottom: 18px;
+		font-weight: bold;
+	}
+	
+	.header-3 {
+		font-size: 1.75rem;
+		color: #222;
+		margin-bottom: 16px;
+		font-weight: bold;
+	}
+	
+	.header-4 {
+		font-size: 1.5rem;
+		color: #222;
+		margin-bottom: 14px;
+		font-weight: bold;
+	}
+	
+	.header-5 {
+		font-size: 1.25rem;
+		color: #222;
+		margin-bottom: 12px;
+		font-weight: bold;
+	}
+	
+	.header-6 {
+		font-size: 1rem;
+		color: #222;
+		margin-bottom: 10px;
+		font-weight: bold;
+	}`
+	err := os.Mkdir(outDir+"\\css", fs.FileMode(os.O_RDWR))
+	if err != nil {
+		return err
+	}
+	err = os.WriteFile(outDir+"\\css\\styles.css", []byte(css), fs.FileMode(os.O_RDWR))
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *MdConverter) StartConverting(outDir string) {
 	for _, config := range m.Configs {
 		fileNameWords := strings.Split(config.ConfigPath, "\\")
 		fileName := fileNameWords[len(fileNameWords)-1]
@@ -240,5 +351,9 @@ func (m *MdConverter) StartConverting(outDir *string) {
 		if err != nil {
 			log.Fatal(err)
 		}
+	}
+	err := m.CreateCss(outDir)
+	if err != nil {
+		log.Fatal(err)
 	}
 }
