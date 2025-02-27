@@ -10,7 +10,8 @@ import (
 )
 
 func main() {
-	outDir := flag.String("output_dir", "", "Full path where to save htmls")
+	createOut := flag.Bool("create_out", false, "To create empty output dir or not?")
+	outDir := flag.String("out_dir", "", "Full path where to save htmls")
 	yamls := flag.String("yamls", "", "Path to yaml configuration")
 
 	flag.Parse()
@@ -36,7 +37,7 @@ func main() {
 	yaProc.ReadYamls()
 
 	mdConv := mdconverter.MdConverter{Configs: yaProc.ProcessedConfigs}
-	mdConv.StartConverting(*outDir + "\\")
+	mdConv.StartConverting(*outDir+"\\", *createOut)
 
 	server.RunServer(*outDir)
 }

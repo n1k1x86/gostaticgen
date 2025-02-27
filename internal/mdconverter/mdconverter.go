@@ -6,6 +6,7 @@ import (
 	"io/fs"
 	"log"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 )
@@ -418,7 +419,39 @@ func (m *MdConverter) CreateCss(outDir string) error {
 	return nil
 }
 
-func (m *MdConverter) StartConverting(outDir string) {
+func (m *MdConverter) ClearOutDir(dir *os.File, dirPath string) {
+	names, err := dir.Readdirnames(-1)
+	if err != nil {
+		log.Fatal(err)
+	}
+	for _, name := range names {
+		filename := filepath.Join(dirPath, name)
+		err := os.RemoveAll(filename)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+	log.Print("[INFO] - output dir was cleared successfully")
+}
+
+func (m *MdConverter) IsDirExist(outDir string, createOut bool) {
+	dir, err := os.Open(outDir)
+	if err != nil && !createOut {
+		log.Fatal(err)
+	} else if createOut && err != nil {
+		err := os.Mkdir(outDir, fs.FileMode(os.O_RDWR))
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+	defer dir.Close()
+	if dir != nil {
+		m.ClearOutDir(dir, outDir)
+	}
+}
+
+func (m *MdConverter) StartConverting(outDir string, createOut bool) {
+	m.IsDirExist(outDir, createOut)
 	for _, config := range m.Configs {
 		fileNameWords := strings.Split(config.ConfigPath, "\\")
 		fileName := fileNameWords[len(fileNameWords)-1]
