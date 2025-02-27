@@ -207,15 +207,8 @@ func (m *MdConverter) FinishPage(title string, body string) string {
 		<header class="site-header">
 			<div class="container">
 				<div class="logo">
-					<a href="/">GoWiki</a>
+					<a href="#">GoWiki</a>
 				</div>
-				<nav class="navbar">
-					<ul class="nav-links">
-						<li><a href="index.html">Home</a></li>
-						<li><a href="about.html">About</a></li>
-						<li><a href="contact.html">Contact</a></li>
-					</ul>
-				</nav>
 			</div>
 		</header>
 		%s
